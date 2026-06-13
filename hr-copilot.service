@@ -1,0 +1,17 @@
+[Unit]
+Description=HR Copilot Flask API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/eerobot
+ExecStart=/usr/bin/python3 /root/eerobot/backend/app.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
