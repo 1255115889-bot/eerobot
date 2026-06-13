@@ -1,172 +1,562 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EERobot - 实时时钟</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-        }
-        .container {
-            text-align: center;
-            padding: 3rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            animation: fadeIn 1s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .time {
-            font-size: 5rem;
-            font-weight: 300;
-            letter-spacing: 8px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 1rem 0;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
-        .date {
-            font-size: 1.4rem;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 0.5rem;
-        }
-        .weekday {
-            font-size: 1.1rem;
-            color: rgba(255,255,255,0.5);
-        }
-        .footer {
-            margin-top: 2rem;
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.3);
-        }
-        .footer a { color: #764ba2; text-decoration: none; }
-        .countdown-section {
-            margin: 1.5rem 0;
-            padding: 1.5rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .countdown-title {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 0.8rem;
-            letter-spacing: 2px;
-        }
-        .countdown-grid {
-            display: flex;
-            justify-content: center;
-            gap: 1.2rem;
-            flex-wrap: wrap;
-        }
-        .countdown-item {
-            text-align: center;
-            min-width: 60px;
-        }
-        .countdown-value {
-            font-size: 2.2rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .countdown-label {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 0.2rem;
-        }
-        @media (max-width: 600px) {
-            .time { font-size: 2.5rem; letter-spacing: 4px; }
-            .container { padding: 2rem; margin: 1rem; }
-            .countdown-value { font-size: 1.5rem; }
-            .countdown-grid { gap: 0.8rem; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Copilot - 企业级 AI 员工政策顾问</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #c3c6d7; border-radius: 10px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .nav-item { transition: all 0.2s ease; }
+  .nav-item.active { background: #e5eeff; color: #004ac6; font-weight: 600; }
+  .chat-bubble-user { background: #004ac6; color: #fff; border-radius: 1rem 1rem 0.25rem 1rem; }
+  .chat-bubble-ai { background: #fff; border: 1px solid #c3c6d7; border-left: 4px solid #712ae2; border-radius: 1rem 1rem 1rem 0.25rem; }
+  .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .card-hover:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); transition: all 0.2s ease; }
+  .ai-glow { box-shadow: 0 0 20px rgba(113,42,226,0.08); }
+  .typing-dot { animation: typingBounce 1.4s infinite both; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+</style>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface": "#f8f9ff", "surface-dim": "#cbdbf5", "surface-bright": "#f8f9ff",
+          "surface-container-lowest": "#ffffff", "surface-container-low": "#eff4ff",
+          "surface-container": "#e5eeff", "surface-container-high": "#dce9ff",
+          "surface-container-highest": "#d3e4fe", "on-surface": "#0b1c30",
+          "on-surface-variant": "#434655", "outline": "#737686", "outline-variant": "#c3c6d7",
+          "primary": "#004ac6", "on-primary": "#ffffff", "primary-container": "#2563eb",
+          "on-primary-container": "#eeefff", "primary-fixed": "#dbe1ff",
+          "on-primary-fixed": "#00174b", "on-primary-fixed-variant": "#003ea8",
+          "secondary": "#712ae2", "on-secondary": "#ffffff", "secondary-container": "#8a4cfc",
+          "on-secondary-container": "#fffbff", "secondary-fixed": "#eaddff",
+          "on-secondary-fixed": "#25005a", "tertiary": "#943700", "on-tertiary": "#ffffff",
+          "tertiary-container": "#bc4800", "on-tertiary-container": "#ffede6",
+          "error": "#ba1a1a", "on-error": "#ffffff", "error-container": "#ffdad6",
+          "on-error-container": "#93000a",
+        },
+        spacing: { "sidebar-width": "260px", "gutter": "24px" }
+      }
+    }
+  }
+</script>
 </head>
-<body>
-    <div class="container">
-        <h2>🕐 EERobot 实时时钟</h2>
-        <div class="time" id="time">--:--:--</div>
-        <div class="date" id="date">----年--月--日</div>
-        <div class="weekday" id="weekday">星期-</div>
-        <div class="countdown-section">
-            <div class="countdown-title">⏳ 距离 2026年7月1日 还有</div>
-            <div class="countdown-grid">
-                <div class="countdown-item">
-                    <div class="countdown-value" id="cd-days">0</div>
-                    <div class="countdown-label">天</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="countdown-value" id="cd-hours">0</div>
-                    <div class="countdown-label">时</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="countdown-value" id="cd-minutes">0</div>
-                    <div class="countdown-label">分</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="countdown-value" id="cd-seconds">0</div>
-                    <div class="countdown-label">秒</div>
-                </div>
-            </div>
-        </div>
-        <div class="footer">
-            Powered by <a href="https://github.com/1255115889-bot/eerobot">EERobot</a>
-        </div>
-    </div>
-    <script>
-        function updateClock() {
-            const now = new Date();
-            const time = now.toLocaleTimeString('zh-CN', { hour12: false });
-            const date = now.toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric' });
-            const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-            const weekday = weekdays[now.getDay()];
-            document.getElementById('time').textContent = time;
-            document.getElementById('date').textContent = date;
-            document.getElementById('weekday').textContent = weekday;
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
+<body class="bg-surface text-on-surface min-h-screen flex">
 
-        // 倒计时：距离 2026年7月1日
-        const targetDate = new Date('2026-07-01T00:00:00+08:00');
-        function updateCountdown() {
-            const now = new Date();
-            const diff = targetDate - now;
-            if (diff <= 0) {
-                document.getElementById('cd-days').textContent = '0';
-                document.getElementById('cd-hours').textContent = '0';
-                document.getElementById('cd-minutes').textContent = '0';
-                document.getElementById('cd-seconds').textContent = '0';
-                return;
-            }
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            document.getElementById('cd-days').textContent = days;
-            document.getElementById('cd-hours').textContent = hours;
-            document.getElementById('cd-minutes').textContent = minutes;
-            document.getElementById('cd-seconds').textContent = seconds;
+<!-- ====== SIDEBAR ====== -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-surface-container-low border-r border-outline-variant flex flex-col p-4 gap-2 z-40">
+  <div class="mb-4 px-2">
+    <h1 class="text-xl font-black text-primary">HR Copilot</h1>
+    <p class="text-xs text-on-surface-variant">企业级 AI 助手</p>
+  </div>
+
+  <!-- Role Switcher -->
+  <div class="mb-2 bg-surface-container rounded-xl p-1 flex border border-outline-variant">
+    <button onclick="switchRole('employee')" id="role-employee" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all bg-primary text-on-primary">
+      <span class="material-symbols-outlined text-sm">person</span> 员工
+    </button>
+    <button onclick="switchRole('hr')" id="role-hr" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all text-on-surface-variant">
+      <span class="material-symbols-outlined text-sm">admin_panel_settings</span> HR
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 flex flex-col gap-1" id="sidebar-nav">
+    <!-- Employee pages -->
+    <a onclick="showPage('chat')" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" data-role="employee" id="nav-chat">
+      <span class="material-symbols-outlined">chat</span>
+      <span class="text-sm">AI 对话</span>
+    </a>
+    <a onclick="showPage('workflow')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" data-role="employee" id="nav-workflow">
+      <span class="material-symbols-outlined">account_tree</span>
+      <span class="text-sm">业务办理</span>
+    </a>
+    <a onclick="showPage('myrequests')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" data-role="employee">
+      <span class="material-symbols-outlined">pending_actions</span>
+      <span class="text-sm">我的申请</span>
+    </a>
+    <!-- HR pages -->
+    <a onclick="showPage('knowledge')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" data-role="hr" style="display:none" id="nav-knowledge">
+      <span class="material-symbols-outlined">menu_book</span>
+      <span class="text-sm">知识库</span>
+    </a>
+    <a onclick="showPage('approval')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" data-role="hr" style="display:none" id="nav-approval">
+      <span class="material-symbols-outlined">verified</span>
+      <span class="text-sm">审批中心</span>
+    </a>
+    <a onclick="showPage('dashboard')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer" data-role="hr" style="display:none" id="nav-dashboard">
+      <span class="material-symbols-outlined">analytics</span>
+      <span class="text-sm">数据分析</span>
+    </a>
+  </nav>
+
+  <div class="mt-auto pt-2 border-t border-outline-variant">
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-xl text-sm cursor-pointer">
+      <span class="material-symbols-outlined">help</span> 帮助
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-xl text-sm cursor-pointer">
+      <span class="material-symbols-outlined">settings</span> 设置
+    </a>
+  </div>
+</aside>
+
+<!-- ====== MAIN CONTENT ====== -->
+<main class="ml-sidebar-width flex-1 flex flex-col min-h-screen">
+  <header class="h-14 flex justify-between items-center px-6 py-2 bg-surface border-b border-outline-variant sticky top-0 z-30">
+    <div class="flex items-center gap-3">
+      <span id="current-role-badge" class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-base">person</span> 员工视图
+      </span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">notifications</span>
+      <div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm">张</div>
+    </div>
+  </header>
+
+  <!-- ====== PAGE: AI 对话 ====== -->
+  <section class="page active flex-1 flex flex-col" id="page-chat">
+    <div class="flex-1 overflow-y-auto px-6 py-6" id="chat-messages">
+      <!-- Welcome -->
+      <div class="max-w-3xl mx-auto text-center py-12" id="chat-welcome">
+        <span class="material-symbols-outlined text-5xl text-primary mb-4" style="font-size:64px">psychology</span>
+        <h2 class="text-2xl font-bold mb-2">您好！我是 HR Copilot</h2>
+        <p class="text-on-surface-variant mb-8">我可以帮您查询 HR 政策、办理业务、解答疑问</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto text-left">
+          <button onclick="askPreset('年假怎么申请？')" class="text-left p-3 rounded-xl border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-sm">
+            <span class="material-symbols-outlined text-primary text-sm">beach_access</span> 年假怎么申请？
+          </button>
+          <button onclick="askPreset('在职证明怎么开？')" class="text-left p-3 rounded-xl border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-sm">
+            <span class="material-symbols-outlined text-primary text-sm">description</span> 在职证明怎么开？
+          </button>
+          <button onclick="askPreset('薪资什么时候发？')" class="text-left p-3 rounded-xl border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-sm">
+            <span class="material-symbols-outlined text-primary text-sm">payments</span> 薪资什么时候发？
+          </button>
+          <button onclick="askPreset('怎么查看我的合同？')" class="text-left p-3 rounded-xl border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-sm">
+            <span class="material-symbols-outlined text-primary text-sm">contract</span> 怎么查看我的合同？
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Chat Input -->
+    <div class="border-t border-outline-variant bg-surface p-4">
+      <div class="max-w-3xl mx-auto flex gap-3 items-end">
+        <textarea id="chat-input" rows="2" placeholder="输入您的 HR 问题..." 
+          class="flex-1 rounded-xl border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-primary resize-none p-3 text-sm"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+        <button onclick="sendMessage()" class="bg-primary text-on-primary p-3 rounded-xl hover:opacity-90 transition-all flex-shrink-0">
+          <span class="material-symbols-outlined">send</span>
+        </button>
+      </div>
+      <p class="text-xs text-on-surface-variant text-center mt-2">AI 回答均基于知识库，请以官方政策为准</p>
+    </div>
+  </section>
+
+  <!-- ====== PAGE: 业务办理 (工作流中心) ====== -->
+  <section class="page flex-1 overflow-y-auto" id="page-workflow">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <h2 class="text-2xl font-bold mb-1">工作流中心</h2>
+      <p class="text-on-surface-variant mb-6">轻松管理您正在进行的申请，跟踪审批进度，并启动新的人力资源请求。</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white border border-outline-variant p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-primary text-3xl">pending_actions</span>
+            <span class="text-primary font-black text-2xl">02</span>
+          </div>
+          <h4 class="text-lg font-semibold">审核中</h4>
+          <p class="text-sm text-on-surface-variant">正在处理的申请</p>
+        </div>
+        <div class="bg-white border border-outline-variant p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-green-600 text-3xl">check_circle</span>
+            <span class="text-green-600 font-black text-2xl">14</span>
+          </div>
+          <h4 class="text-lg font-semibold">已通过</h4>
+          <p class="text-sm text-on-surface-variant">已成功完成</p>
+        </div>
+        <div class="bg-white border border-outline-variant p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-2">
+            <span class="material-symbols-outlined text-error text-3xl">cancel</span>
+            <span class="text-error font-black text-2xl">01</span>
+          </div>
+          <h4 class="text-lg font-semibold">已拒绝</h4>
+          <p class="text-sm text-on-surface-variant">需要您关注</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">我的申请</h3>
+        <div class="flex gap-2">
+          <button class="bg-surface-container px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">全部申请</button>
+          <button class="bg-white border border-outline-variant px-4 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low transition-colors">筛选</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Card 1 -->
+        <div class="bg-white border border-outline-variant rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="flex justify-between items-start mb-3">
+            <div class="bg-primary-fixed p-2.5 rounded-xl">
+              <span class="material-symbols-outlined text-on-primary-fixed">description</span>
+            </div>
+            <span class="px-2 py-1 bg-surface-container-highest text-on-surface-variant rounded-full text-xs font-semibold uppercase">审核中</span>
+          </div>
+          <h5 class="text-lg font-semibold mb-1">在职证明申请</h5>
+          <p class="text-xs text-on-surface-variant mb-4">单号: #REQ-9842 · 10月24日</p>
+          <div class="pt-3 border-t border-outline-variant flex items-center justify-between">
+            <div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center text-xs font-bold">HR</div>
+            <span class="text-xs text-on-surface-variant">2小时前更新</span>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-white border border-outline-variant rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="flex justify-between items-start mb-3">
+            <div class="bg-secondary-fixed p-2.5 rounded-xl">
+              <span class="material-symbols-outlined text-on-secondary-fixed">flight_takeoff</span>
+            </div>
+            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold uppercase">已通过</span>
+          </div>
+          <h5 class="text-lg font-semibold mb-1">年假申请 (5天)</h5>
+          <p class="text-xs text-on-surface-variant mb-4">单号: #REQ-9710 · 10月15日</p>
+          <div class="pt-3 border-t border-outline-variant flex items-center justify-between">
+            <span class="text-xs text-on-surface-variant">审批人: Sarah J.</span>
+            <span class="text-xs text-on-surface-variant">10月17日</span>
+          </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-white border border-outline-variant rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="flex justify-between items-start mb-3">
+            <div class="bg-tertiary-fixed p-2.5 rounded-xl">
+              <span class="material-symbols-outlined text-on-tertiary-fixed">medical_services</span>
+            </div>
+            <span class="px-2 py-1 bg-red-100 text-error rounded-full text-xs font-semibold uppercase">已拒绝</span>
+          </div>
+          <h5 class="text-lg font-semibold mb-1">医疗费用报销</h5>
+          <p class="text-xs text-on-surface-variant mb-4">单号: #REQ-9654 · 10月10日</p>
+          <div class="pt-3 border-t border-outline-variant flex items-center justify-between">
+            <span class="text-xs text-error flex items-center gap-1"><span class="material-symbols-outlined text-xs">info</span>缺少附件</span>
+            <span class="text-xs text-on-surface-variant">10月12日</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all" onclick="showNewRequestModal()">
+          <span class="material-symbols-outlined text-sm">add</span> 新建申请
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== PAGE: 我的申请 ====== -->
+  <section class="page flex-1 overflow-y-auto" id="page-myrequests">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <h2 class="text-2xl font-bold mb-4">我的申请</h2>
+      <table class="w-full bg-white rounded-2xl border border-outline-variant">
+        <thead><tr class="border-b border-outline-variant text-sm text-on-surface-variant uppercase tracking-wider">
+          <th class="text-left p-4">单号</th><th class="text-left p-4">类型</th><th class="text-left p-4">提交日期</th><th class="text-left p-4">状态</th><th class="text-left p-4">操作</th>
+        </tr></thead>
+        <tbody>
+          <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm font-mono">#REQ-9842</td><td class="p-4 text-sm">在职证明</td><td class="p-4 text-sm">10月24日</td><td class="p-4"><span class="px-2 py-1 bg-surface-container-highest rounded-full text-xs font-semibold text-on-surface-variant">审核中</span></td><td class="p-4"><a class="text-primary text-sm hover:underline cursor-pointer">查看</a></td></tr>
+          <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm font-mono">#REQ-9710</td><td class="p-4 text-sm">年假申请</td><td class="p-4 text-sm">10月15日</td><td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">已通过</span></td><td class="p-4"><a class="text-primary text-sm hover:underline cursor-pointer">查看</a></td></tr>
+          <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm font-mono">#REQ-9654</td><td class="p-4 text-sm">医疗费用报销</td><td class="p-4 text-sm">10月10日</td><td class="p-4"><span class="px-2 py-1 bg-red-100 text-error rounded-full text-xs font-semibold">已拒绝</span></td><td class="p-4"><a class="text-primary text-sm hover:underline cursor-pointer">查看</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ====== PAGE: 知识库 (HR) ====== -->
+  <section class="page flex-1 overflow-y-auto" id="page-knowledge">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <div class="flex items-center justify-between mb-6">
+        <div><h2 class="text-2xl font-bold mb-1">知识库管理</h2><p class="text-sm text-on-surface-variant">管理 HR 政策知识条目，AI 将基于此回答员工问题</p></div>
+        <button class="bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all flex items-center gap-2 text-sm">
+          <span class="material-symbols-outlined text-sm">add</span> 添加条目
+        </button>
+      </div>
+      <div class="bg-white rounded-2xl border border-outline-variant overflow-hidden">
+        <table class="w-full">
+          <thead><tr class="border-b border-outline-variant text-sm text-on-surface-variant uppercase tracking-wider bg-surface-container-low">
+            <th class="text-left p-4">序号</th><th class="text-left p-4">分类</th><th class="text-left p-4">问题/标题</th><th class="text-left p-4">答案摘要</th><th class="text-left p-4">状态</th><th class="text-left p-4">操作</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm">1</td><td class="p-4"><span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-semibold">休假政策</span></td><td class="p-4 text-sm font-medium">年假怎么申请？</td><td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">员工通过 OA 系统提交年假申请，需提前3个工作日...</td><td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">已发布</span></td><td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline">删除</a></td></tr>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm">2</td><td class="p-4"><span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-semibold">证明文件</span></td><td class="p-4 text-sm font-medium">在职证明怎么开？</td><td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">通过 HR Copilot 或 OA 系统申请，2-3个工作日开具...</td><td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">已发布</span></td><td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline">删除</a></td></tr>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm">3</td><td class="p-4"><span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-semibold">薪资</span></td><td class="p-4 text-sm font-medium">薪资什么时候发？</td><td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">每月15日发放上月薪资，遇节假日顺延至下一个工作日...</td><td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">已发布</span></td><td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline">删除</a></td></tr>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm">4</td><td class="p-4"><span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-semibold">合同</span></td><td class="p-4 text-sm font-medium">怎么查看我的合同？</td><td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">登录 OA → 个人信息 → 合同管理，可查看或下载合同...</td><td class="p-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">草稿</span></td><td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline">删除</a></td></tr>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm">5</td><td class="p-4"><span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-semibold">出勤</span></td><td class="p-4 text-sm font-medium">考勤异常怎么处理？</td><td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">可在 OA 提交考勤异常申诉，HR将在3个工作日内处理...</td><td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">已发布</span></td><td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline">删除</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-on-surface-variant mt-3">共 5 条知识条目 · 知识更新不影响系统代码</p>
+    </div>
+  </section>
+
+  <!-- ====== PAGE: 审批中心 (HR) ====== -->
+  <section class="page flex-1 overflow-y-auto" id="page-approval">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <div class="flex items-center justify-between mb-6">
+        <div><h2 class="text-2xl font-bold mb-1">审批中心</h2><p class="text-sm text-on-surface-variant">处理员工的业务申请</p></div>
+        <div class="flex gap-2">
+          <button class="bg-surface-container px-4 py-2 rounded-lg text-sm font-medium">全部</button>
+          <button class="bg-white border border-outline-variant px-4 py-2 rounded-lg text-sm">待审批</button>
+          <button class="bg-white border border-outline-variant px-4 py-2 rounded-lg text-sm">已处理</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-outline-variant overflow-hidden">
+        <table class="w-full">
+          <thead><tr class="border-b border-outline-variant text-sm text-on-surface-variant uppercase tracking-wider bg-surface-container-low">
+            <th class="text-left p-4">申请单号</th><th class="text-left p-4">申请人</th><th class="text-left p-4">类型</th><th class="text-left p-4">提交时间</th><th class="text-left p-4">状态</th><th class="text-left p-4">操作</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm font-mono">#REQ-9842</td><td class="p-4 text-sm">张三</td><td class="p-4 text-sm">在职证明</td><td class="p-4 text-sm">10月24日 14:30</td><td class="p-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">待审批</span></td><td class="p-4 flex gap-2">
+              <button class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">通过</button>
+              <button class="bg-error text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">拒绝</button>
+            </td></tr>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm font-mono">#REQ-9901</td><td class="p-4 text-sm">李四</td><td class="p-4 text-sm">年假申请</td><td class="p-4 text-sm">10月25日 09:15</td><td class="p-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">待审批</span></td><td class="p-4 flex gap-2">
+              <button class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">通过</button>
+              <button class="bg-error text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">拒绝</button>
+            </td></tr>
+            <tr class="border-b border-outline-variant hover:bg-surface-container-low"><td class="p-4 text-sm font-mono">#REQ-9710</td><td class="p-4 text-sm">王五</td><td class="p-4 text-sm">年假申请</td><td class="p-4 text-sm">10月15日 11:00</td><td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">已通过</span></td><td class="p-4"><a class="text-primary text-sm cursor-pointer hover:underline">查看详情</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== PAGE: 数据分析 (HR) ====== -->
+  <section class="page flex-1 overflow-y-auto" id="page-dashboard">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <h2 class="text-2xl font-bold mb-6">数据分析仪表盘</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">今日咨询量</p><p class="text-3xl font-black text-primary mt-2">247</p><p class="text-xs text-green-600 mt-1">↑ 12%</p></div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">待审批</p><p class="text-3xl font-black text-yellow-600 mt-2">18</p></div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">本月通过率</p><p class="text-3xl font-black text-green-600 mt-2">94%</p></div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">知识库条目</p><p class="text-3xl font-black text-secondary mt-2">52</p></div>
+      </div>
+      <div class="bg-white border border-outline-variant rounded-2xl p-6">
+        <h3 class="text-lg font-semibold mb-4">热门咨询类型</h3>
+        <div class="space-y-3">
+          <div><div class="flex justify-between text-sm mb-1"><span>休假政策</span><span>38%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:38%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span>薪资福利</span><span>27%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-secondary rounded-full" style="width:27%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span>证明文件</span><span>18%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-primary-container rounded-full" style="width:18%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span>合同管理</span><span>10%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-tertiary rounded-full" style="width:10%"></div></div></div>
+          <div><div class="flex justify-between text-sm mb-1"><span>考勤异常</span><span>7%</span></div><div class="h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-outline rounded-full" style="width:7%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-outline-variant py-3 px-6 flex justify-between items-center text-xs text-on-surface-variant bg-surface">
+    <span>© 2024 Enterprise AI HR Copilot · AI 响应均应参照官方政策文件核实</span>
+    <div class="flex gap-4">
+      <a class="hover:text-primary cursor-pointer">隐私政策</a>
+      <a class="hover:text-primary cursor-pointer">服务条款</a>
+      <a class="hover:text-primary cursor-pointer">AI 披露声明</a>
+    </div>
+  </footer>
+</main>
+
+<!-- ====== New Request Modal ====== -->
+<div id="requestModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden">
+  <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-fade-in overflow-hidden">
+    <div class="p-5 border-b border-outline-variant flex justify-between items-center">
+      <h3 class="text-lg font-semibold">新建业务申请</h3>
+      <button onclick="document.getElementById('requestModal').classList.add('hidden')" class="material-symbols-outlined p-1.5 hover:bg-surface-container-low rounded-full">close</button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div><label class="block text-sm font-medium text-on-surface-variant mb-1">申请类型</label>
+        <select class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:border-primary h-11 text-sm">
+          <option>在职证明</option><option>收入证明</option><option>年假申请</option><option>考勤申诉</option>
+        </select></div>
+      <div><label class="block text-sm font-medium text-on-surface-variant mb-1">申请用途</label>
+        <select class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:border-primary h-11 text-sm">
+          <option>银行贷款/抵押</option><option>签证申请</option><option>房东核实</option><option>其他</option>
+        </select></div>
+      <div><label class="block text-sm font-medium text-on-surface-variant mb-1">补充信息</label>
+        <textarea class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:border-primary p-3 text-sm" rows="3" placeholder="请注明特定接收方或特别说明..."></textarea></div>
+      <div class="bg-surface-container-low p-3 rounded-xl flex items-start gap-2">
+        <span class="material-symbols-outlined text-primary text-sm">info</span>
+        <p class="text-xs text-on-surface-variant">证明通常在 2-3 个工作日内开具。电子副本将发送至您的官方邮箱。</p>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="document.getElementById('requestModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 border border-outline-variant rounded-xl font-medium text-on-surface-variant hover:bg-surface-container-low transition-all text-sm">取消</button>
+        <button onclick="submitRequest()" class="flex-1 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold hover:opacity-90 transition-all text-sm">提交申请</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== JavaScript ====== -->
+<script>
+  // === Knowledge Base (simulated) ===
+  const knowledgeBase = {
+    '年假': { answer: '员工每年享有 5-15 天带薪年假（根据工龄）。请通过 OA 系统「休假管理」提交申请，需提前 3 个工作日。审批流程：直属上级 → HR 确认。审批通过后系统自动扣减年假余额。', source: '《员工手册》第 3.2 节 · 休假管理制度', cards: [{type:'action',title:'年假申请',desc:'处理时间: 1-2个工作日 · 需提前3天',btn:'立即申请'}] },
+    '在职证明': { answer: '在职证明可通过以下方式申请：1) HR Copilot 在线申请；2) OA 系统「证明文件」模块。证明通常在 2-3 个工作日内开具，电子副本发送至您的官方邮箱。如需纸质版，请在备注中说明并到 HR 前台领取。', source: '《行政管理制度》第 5.1 节 · 证明文件管理', cards: [{type:'action',title:'在职证明申请',desc:'处理时间: 2-3个工作日 · 免费',btn:'立即办理'}] },
+    '薪资': { answer: '公司实行月薪制，每月 15 日发放上月薪资（遇节假日顺延至下一个工作日）。薪资明细可在 OA「我的薪资」中查看。薪资结构包括：基本工资 + 绩效工资 + 补贴。如有疑问请咨询 HR 薪酬组。', source: '《薪酬管理制度》第 2.1 节 · 薪资发放', cards: [{type:'info',title:'薪资查询',desc:'查看最近6个月薪资明细',btn:'立即查看'}] },
+    '合同': { answer: '请登录 OA 系统 → 个人信息 → 合同管理，可查看或下载您的劳动合同。合同到期前 30 天系统会自动提醒续签。如有异常请联系 HR。', source: '《劳动合同管理制度》第 4 节 · 合同查询', cards: [{type:'info',title:'合同查询',desc:'查看合同信息及到期日期',btn:'立即查看'}] },
+    '请假': { answer: '请假申请需通过 OA「休假管理」提交，根据类别（年假/事假/病假/婚假等）有不同审批流程。年假按工龄计算，病假需提供医院证明。紧急情况可先电话告知直属上级，后续补办手续。', source: '《考勤与休假管理制度》第 2-5 节', cards: [{type:'action',title:'请假申请',desc:'年假/事假/病假/婚假',btn:'立即办理'}] },
+    '考勤异常': { answer: '如发现考勤异常（缺卡/迟到/早退），可在 OA「考勤管理」提交异常申诉。提交时需说明原因并选择补卡类型。HR 将在 3 个工作日内处理。每月有 3 次补卡机会。', source: '《考勤管理制度》第 6 节 · 异常处理', cards: [{type:'alert',title:'考勤异常申诉',desc:'HR处理时长: 3个工作日',btn:'提交申诉'}] },
+    '收入证明': { answer: '收入证明申请流程与在职证明类似。请通过 HR Copilot 或 OA 提交申请，选择「收入证明」类型。证明包含您的月收入信息，2-3 个工作日开具。', source: '《行政管理制度》第 5.2 节', cards: [{type:'action',title:'收入证明申请',desc:'处理时间: 2-3个工作日',btn:'立即办理'}] },
+    '病假': { answer: '病假需提供二级甲等及以上医院开具的病假证明。病假期间薪资按国家规定执行：医疗期内按工龄比例发放。请通过 OA「休假管理」-「病假」提交申请并上传医院证明。', source: '《考勤与休假管理制度》第 4 节 · 病假管理', cards: [{type:'action',title:'病假申请',desc:'需上传医院证明',btn:'立即办理'}] },
+    'default': { answer: '该问题暂未收录在知识库中，建议您联系 HR 部门进一步确认。您也可以尝试以下方式：1) 致电 HR 热线 8888；2) 发送邮件至 hr@company.com。', source: null, cards: [] }
+  };
+
+  function findAnswer(query) {
+    for (const [keyword, data] of Object.entries(knowledgeBase)) {
+      if (query.includes(keyword)) return data;
+    }
+    return knowledgeBase['default'];
+  }
+
+  // === Chat Functions ===
+  function addMessage(content, isUser, isTyping = false) {
+    const container = document.getElementById('chat-messages');
+    document.getElementById('chat-welcome').style.display = 'none';
+    const div = document.createElement('div');
+    div.className = `max-w-3xl mx-auto mb-4 ${isUser ? 'flex justify-end' : 'flex justify-start'} animate-fade-in`;
+    
+    if (isUser) {
+      div.innerHTML = `<div class="chat-bubble-user px-4 py-2.5 max-w-[80%]"><p class="text-sm">${content}</p></div>`;
+    } else if (isTyping) {
+      div.id = 'typing-indicator';
+      div.innerHTML = `<div class="chat-bubble-ai px-4 py-3 max-w-[80%]"><div class="flex gap-1.5"><span class="typing-dot w-2 h-2 bg-secondary rounded-full inline-block"></span><span class="typing-dot w-2 h-2 bg-secondary rounded-full inline-block"></span><span class="typing-dot w-2 h-2 bg-secondary rounded-full inline-block"></span></div></div>`;
+    } else {
+      div.innerHTML = `<div class="chat-bubble-ai px-5 py-4 max-w-[85%]">${content}</div>`;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const query = input.value.trim();
+    if (!query) return;
+    
+    addMessage(query, true);
+    input.value = '';
+    
+    // Show typing indicator
+    setTimeout(() => {
+      addMessage('', false, true);
+      
+      // Find answer and respond after delay
+      setTimeout(() => {
+        removeTyping();
+        const data = findAnswer(query);
+        let html = `<p class="text-sm leading-relaxed mb-3">${data.answer}</p>`;
+        
+        if (data.source) {
+          html += `<div class="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
+            <span class="material-symbols-outlined text-xs">menu_book</span>
+            <span>📋 ${data.source}</span>
+          </div>`;
         }
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-    </script>
+        
+        // Business cards
+        if (data.cards && data.cards.length > 0) {
+          html += '<div class="mt-3 pt-3 border-t border-outline-variant flex flex-wrap gap-3">';
+          data.cards.forEach(card => {
+            const icon = card.type === 'action' ? 'rocket_launch' : card.type === 'info' ? 'info' : 'warning';
+            const bg = card.type === 'action' ? 'bg-primary-fixed border-primary' : card.type === 'info' ? 'bg-surface-container-low border-outline-variant' : 'bg-error-container border-error';
+            html += `<div class="${bg} border rounded-xl p-3 flex-1 min-w-[200px]">
+              <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-sm">${icon}</span><span class="text-sm font-semibold">${card.title}</span></div>
+              <p class="text-xs text-on-surface-variant mb-2">${card.desc}</p>
+              <button class="bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">${card.btn}</button>
+            </div>`;
+          });
+          html += '</div>';
+        }
+        
+        addMessage(html, false);
+      }, 1200 + Math.random() * 800);
+    }, 300);
+  }
+
+  function askPreset(question) {
+    document.getElementById('chat-input').value = question;
+    sendMessage();
+  }
+
+  // === Navigation ===
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const page = document.getElementById('page-' + pageId);
+    if (page) page.classList.add('active');
+    const nav = document.getElementById('nav-' + pageId);
+    if (nav) nav.classList.add('active');
+  }
+
+  let currentRole = 'employee';
+
+  function switchRole(role) {
+    currentRole = role;
+    document.getElementById('role-employee').className = role === 'employee' 
+      ? 'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all bg-primary text-on-primary'
+      : 'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all text-on-surface-variant';
+    document.getElementById('role-hr').className = role === 'hr'
+      ? 'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all bg-primary text-on-primary'
+      : 'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all text-on-surface-variant';
+    
+    const badge = document.getElementById('current-role-badge');
+    badge.innerHTML = role === 'employee' 
+      ? '<span class="material-symbols-outlined text-base">person</span> 员工视图'
+      : '<span class="material-symbols-outlined text-base">admin_panel_settings</span> HR 管理视图';
+    
+    // Show/hide nav items
+    document.querySelectorAll('[data-role]').forEach(el => {
+      el.style.display = el.dataset.role === role ? '' : 'none';
+    });
+    
+    // Navigate to appropriate page
+    if (role === 'employee') {
+      showPage('chat');
+    } else {
+      showPage('knowledge');
+    }
+  }
+
+  // === Modal ===
+  function showNewRequestModal() {
+    document.getElementById('requestModal').classList.remove('hidden');
+  }
+  
+  function submitRequest() {
+    document.getElementById('requestModal').classList.add('hidden');
+    alert('申请提交成功！跟踪单号: #REQ-NEW-' + Math.floor(Math.random()*10000));
+  }
+
+  // Close modal on Escape
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.getElementById('requestModal').classList.add('hidden');
+  });
+
+  // Click outside modal to close
+  document.getElementById('requestModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+  });
+</script>
 </body>
 </html>
