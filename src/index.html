@@ -396,7 +396,7 @@
       </div>
       <div class="flex gap-3 pt-2">
         <button onclick="document.getElementById('requestModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 border border-outline-variant rounded-xl font-medium text-on-surface-variant hover:bg-surface-container-low transition-all text-sm">取消</button>
-        <button onclick="submitRequest()" class="flex-1 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold hover:opacity-90 transition-all text-sm">提交申请</button>
+        <button type="button" onclick="submitRequest()" class="flex-1 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold hover:opacity-90 transition-all text-sm">提交申请</button>
       </div>
     </div>
   </div>
@@ -548,7 +548,7 @@
           <td class="p-4 text-sm font-medium">${e.question}</td>
           <td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">${e.answer.substring(0, 40)}...</td>
           <td class="p-4"><span class="px-2 py-1 ${e.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} rounded-full text-xs font-semibold">${e.status === 'published' ? '已发布' : '草稿'}</span></td>
-          <td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline" onclick="deleteKB(${e.id})">删除</a></td>
+          <td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline" onclick="editKB(${e.id})">编辑</a><a class="text-error text-sm cursor-pointer hover:underline" onclick="deleteKB(${e.id})">删除</a></td>
         </tr>`).join('');
     } catch (err) {
       console.error('loadKnowledge:', err);
@@ -559,6 +559,27 @@
     if (!confirm('确认删除该知识条目？')) return;
     await fetch(`${API_BASE}/knowledge/${id}`, {method: 'DELETE'});
     loadKnowledge();
+  }
+
+  async function editKB(id) {
+    const category = prompt('分类（如：休假政策、证明文件）：');
+    if (!category) return;
+    const question = prompt('问题（如：年假怎么申请？）：');
+    if (!question) return;
+    const answer = prompt('答案：');
+    if (!answer) return;
+    const source = prompt('政策来源（如：《员工手册》第3.2节）：') || '';
+    try {
+      await fetch(`${API_BASE}/knowledge/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({category, question, answer, source})
+      });
+      alert('知识条目已更新！');
+      loadKnowledge();
+    } catch (err) {
+      alert('更新失败: ' + err.message);
+    }
   }
 
   // === Approvals (HR) ===
