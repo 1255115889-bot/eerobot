@@ -404,25 +404,8 @@
 
 <!-- ====== JavaScript ====== -->
 <script>
-  // === Knowledge Base (simulated) ===
-  const knowledgeBase = {
-    '年假': { answer: '员工每年享有 5-15 天带薪年假（根据工龄）。请通过 OA 系统「休假管理」提交申请，需提前 3 个工作日。审批流程：直属上级 → HR 确认。审批通过后系统自动扣减年假余额。', source: '《员工手册》第 3.2 节 · 休假管理制度', cards: [{type:'action',title:'年假申请',desc:'处理时间: 1-2个工作日 · 需提前3天',btn:'立即申请'}] },
-    '在职证明': { answer: '在职证明可通过以下方式申请：1) HR Copilot 在线申请；2) OA 系统「证明文件」模块。证明通常在 2-3 个工作日内开具，电子副本发送至您的官方邮箱。如需纸质版，请在备注中说明并到 HR 前台领取。', source: '《行政管理制度》第 5.1 节 · 证明文件管理', cards: [{type:'action',title:'在职证明申请',desc:'处理时间: 2-3个工作日 · 免费',btn:'立即办理'}] },
-    '薪资': { answer: '公司实行月薪制，每月 15 日发放上月薪资（遇节假日顺延至下一个工作日）。薪资明细可在 OA「我的薪资」中查看。薪资结构包括：基本工资 + 绩效工资 + 补贴。如有疑问请咨询 HR 薪酬组。', source: '《薪酬管理制度》第 2.1 节 · 薪资发放', cards: [{type:'info',title:'薪资查询',desc:'查看最近6个月薪资明细',btn:'立即查看'}] },
-    '合同': { answer: '请登录 OA 系统 → 个人信息 → 合同管理，可查看或下载您的劳动合同。合同到期前 30 天系统会自动提醒续签。如有异常请联系 HR。', source: '《劳动合同管理制度》第 4 节 · 合同查询', cards: [{type:'info',title:'合同查询',desc:'查看合同信息及到期日期',btn:'立即查看'}] },
-    '请假': { answer: '请假申请需通过 OA「休假管理」提交，根据类别（年假/事假/病假/婚假等）有不同审批流程。年假按工龄计算，病假需提供医院证明。紧急情况可先电话告知直属上级，后续补办手续。', source: '《考勤与休假管理制度》第 2-5 节', cards: [{type:'action',title:'请假申请',desc:'年假/事假/病假/婚假',btn:'立即办理'}] },
-    '考勤异常': { answer: '如发现考勤异常（缺卡/迟到/早退），可在 OA「考勤管理」提交异常申诉。提交时需说明原因并选择补卡类型。HR 将在 3 个工作日内处理。每月有 3 次补卡机会。', source: '《考勤管理制度》第 6 节 · 异常处理', cards: [{type:'alert',title:'考勤异常申诉',desc:'HR处理时长: 3个工作日',btn:'提交申诉'}] },
-    '收入证明': { answer: '收入证明申请流程与在职证明类似。请通过 HR Copilot 或 OA 提交申请，选择「收入证明」类型。证明包含您的月收入信息，2-3 个工作日开具。', source: '《行政管理制度》第 5.2 节', cards: [{type:'action',title:'收入证明申请',desc:'处理时间: 2-3个工作日',btn:'立即办理'}] },
-    '病假': { answer: '病假需提供二级甲等及以上医院开具的病假证明。病假期间薪资按国家规定执行：医疗期内按工龄比例发放。请通过 OA「休假管理」-「病假」提交申请并上传医院证明。', source: '《考勤与休假管理制度》第 4 节 · 病假管理', cards: [{type:'action',title:'病假申请',desc:'需上传医院证明',btn:'立即办理'}] },
-    'default': { answer: '该问题暂未收录在知识库中，建议您联系 HR 部门进一步确认。您也可以尝试以下方式：1) 致电 HR 热线 8888；2) 发送邮件至 hr@company.com。', source: null, cards: [] }
-  };
-
-  function findAnswer(query) {
-    for (const [keyword, data] of Object.entries(knowledgeBase)) {
-      if (query.includes(keyword)) return data;
-    }
-    return knowledgeBase['default'];
-  }
+  // === API Config ===
+  const API_BASE = '/api';
 
   // === Chat Functions ===
   function addMessage(content, isUser, isTyping = false) {
@@ -449,7 +432,23 @@
     if (el) el.remove();
   }
 
-  function sendMessage() {
+  function renderCards(cards) {
+    if (!cards || cards.length === 0) return '';
+    let html = '<div class="mt-3 pt-3 border-t border-outline-variant flex flex-wrap gap-3">';
+    cards.forEach(card => {
+      const icon = card.type === 'action' ? 'rocket_launch' : card.type === 'info' ? 'info' : 'warning';
+      const bg = card.type === 'action' ? 'bg-primary-fixed border-primary' : card.type === 'info' ? 'bg-surface-container-low border-outline-variant' : 'bg-error-container border-error';
+      html += `<div class="${bg} border rounded-xl p-3 flex-1 min-w-[200px]">
+        <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-sm">${icon}</span><span class="text-sm font-semibold">${card.title}</span></div>
+        <p class="text-xs text-on-surface-variant mb-2">${card.desc}</p>
+        <button onclick="showNewRequestModal()" class="bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">${card.btn}</button>
+      </div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  async function sendMessage() {
     const input = document.getElementById('chat-input');
     const query = input.value.trim();
     if (!query) return;
@@ -458,40 +457,36 @@
     input.value = '';
     
     // Show typing indicator
-    setTimeout(() => {
-      addMessage('', false, true);
+    addMessage('', false, true);
+    
+    try {
+      const resp = await fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query, role: currentRole})
+      });
+      const data = await resp.json();
       
-      // Find answer and respond after delay
-      setTimeout(() => {
-        removeTyping();
-        const data = findAnswer(query);
-        let html = `<p class="text-sm leading-relaxed mb-3">${data.answer}</p>`;
-        
-        if (data.source) {
-          html += `<div class="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
-            <span class="material-symbols-outlined text-xs">menu_book</span>
-            <span>📋 ${data.source}</span>
-          </div>`;
+      removeTyping();
+      
+      let html = `<p class="text-sm leading-relaxed mb-3">${data.answer || '(无响应)'}</p>`;
+      
+      if (data.source) {
+        html += `<div class="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
+          <span class="material-symbols-outlined text-xs">menu_book</span>
+          <span>📋 ${data.source}</span>`;
+        if (data.confidence) {
+          html += `<span class="ml-2 px-1.5 py-0.5 bg-primary-fixed rounded text-on-primary-fixed text-xs">匹配度 ${(data.confidence * 100).toFixed(0)}%</span>`;
         }
-        
-        // Business cards
-        if (data.cards && data.cards.length > 0) {
-          html += '<div class="mt-3 pt-3 border-t border-outline-variant flex flex-wrap gap-3">';
-          data.cards.forEach(card => {
-            const icon = card.type === 'action' ? 'rocket_launch' : card.type === 'info' ? 'info' : 'warning';
-            const bg = card.type === 'action' ? 'bg-primary-fixed border-primary' : card.type === 'info' ? 'bg-surface-container-low border-outline-variant' : 'bg-error-container border-error';
-            html += `<div class="${bg} border rounded-xl p-3 flex-1 min-w-[200px]">
-              <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-sm">${icon}</span><span class="text-sm font-semibold">${card.title}</span></div>
-              <p class="text-xs text-on-surface-variant mb-2">${card.desc}</p>
-              <button class="bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">${card.btn}</button>
-            </div>`;
-          });
-          html += '</div>';
-        }
-        
-        addMessage(html, false);
-      }, 1200 + Math.random() * 800);
-    }, 300);
+        html += `</div>`;
+      }
+      
+      html += renderCards(data.cards);
+      addMessage(html, false);
+    } catch (err) {
+      removeTyping();
+      addMessage('<p class="text-sm text-error">⚠️ 服务暂时不可用，请稍后重试</p><p class="text-xs text-on-surface-variant mt-1">' + err.message + '</p>', false);
+    }
   }
 
   function askPreset(question) {
@@ -507,6 +502,12 @@
     if (page) page.classList.add('active');
     const nav = document.getElementById('nav-' + pageId);
     if (nav) nav.classList.add('active');
+    
+    // Load data for specific pages
+    if (pageId === 'knowledge') loadKnowledge();
+    if (pageId === 'approval') loadApprovals();
+    if (pageId === 'dashboard') loadStats();
+    if (pageId === 'myrequests') loadMyRequests();
   }
 
   let currentRole = 'employee';
@@ -525,16 +526,113 @@
       ? '<span class="material-symbols-outlined text-base">person</span> 员工视图'
       : '<span class="material-symbols-outlined text-base">admin_panel_settings</span> HR 管理视图';
     
-    // Show/hide nav items
     document.querySelectorAll('[data-role]').forEach(el => {
       el.style.display = el.dataset.role === role ? '' : 'none';
     });
     
-    // Navigate to appropriate page
-    if (role === 'employee') {
-      showPage('chat');
-    } else {
-      showPage('knowledge');
+    if (role === 'employee') showPage('chat');
+    else showPage('knowledge');
+  }
+
+  // === Knowledge Base (HR) ===
+  async function loadKnowledge() {
+    try {
+      const resp = await fetch(`${API_BASE}/knowledge`);
+      const {data} = await resp.json();
+      const tbody = document.querySelector('#page-knowledge table tbody');
+      if (!tbody || !data) return;
+      tbody.innerHTML = data.map((e, i) => `
+        <tr class="border-b border-outline-variant hover:bg-surface-container-low">
+          <td class="p-4 text-sm">${i + 1}</td>
+          <td class="p-4"><span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs font-semibold">${e.category}</span></td>
+          <td class="p-4 text-sm font-medium">${e.question}</td>
+          <td class="p-4 text-sm text-on-surface-variant max-w-xs truncate">${e.answer.substring(0, 40)}...</td>
+          <td class="p-4"><span class="px-2 py-1 ${e.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} rounded-full text-xs font-semibold">${e.status === 'published' ? '已发布' : '草稿'}</span></td>
+          <td class="p-4 flex gap-2"><a class="text-primary text-sm cursor-pointer hover:underline">编辑</a><a class="text-error text-sm cursor-pointer hover:underline" onclick="deleteKB(${e.id})">删除</a></td>
+        </tr>`).join('');
+    } catch (err) {
+      console.error('loadKnowledge:', err);
+    }
+  }
+
+  async function deleteKB(id) {
+    if (!confirm('确认删除该知识条目？')) return;
+    await fetch(`${API_BASE}/knowledge/${id}`, {method: 'DELETE'});
+    loadKnowledge();
+  }
+
+  // === Approvals (HR) ===
+  async function loadApprovals() {
+    try {
+      const resp = await fetch(`${API_BASE}/requests`);
+      const {data} = await resp.json();
+      const tbody = document.querySelector('#page-approval table tbody');
+      if (!tbody || !data) return;
+      tbody.innerHTML = data.map(r => {
+        const statusMap = {pending: ['待审批', 'bg-yellow-100 text-yellow-800'], approved: ['已通过', 'bg-green-100 text-green-800'], rejected: ['已拒绝', 'bg-red-100 text-error']};
+        const [label, cls] = statusMap[r.status] || ['未知', 'bg-gray-100'];
+        const actions = r.status === 'pending'
+          ? `<button onclick="reviewReq('${r.request_no}','approved')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">通过</button>
+             <button onclick="reviewReq('${r.request_no}','rejected')" class="bg-error text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">拒绝</button>`
+          : `<a class="text-primary text-sm cursor-pointer hover:underline">查看详情</a>`;
+        return `<tr class="border-b border-outline-variant hover:bg-surface-container-low">
+          <td class="p-4 text-sm font-mono">#${r.request_no}</td>
+          <td class="p-4 text-sm">${r.applicant}</td>
+          <td class="p-4 text-sm">${r.type}</td>
+          <td class="p-4 text-sm">${r.created_at}</td>
+          <td class="p-4"><span class="px-2 py-1 ${cls} rounded-full text-xs font-semibold">${label}</span></td>
+          <td class="p-4 flex gap-2">${actions}</td></tr>`;
+      }).join('');
+    } catch (err) {
+      console.error('loadApprovals:', err);
+    }
+  }
+
+  async function reviewReq(requestNo, status) {
+    await fetch(`${API_BASE}/requests/${requestNo}/review`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({status})
+    });
+    loadApprovals();
+  }
+
+  // === My Requests (Employee) ===
+  async function loadMyRequests() {
+    try {
+      const resp = await fetch(`${API_BASE}/requests`);
+      const {data} = await resp.json();
+      const tbody = document.querySelector('#page-myrequests table tbody');
+      if (!tbody || !data) return;
+      tbody.innerHTML = data.map(r => {
+        const statusMap = {pending: 'bg-surface-container-highest text-on-surface-variant', approved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-error'};
+        const labelMap = {pending: '审核中', approved: '已通过', rejected: '已拒绝'};
+        return `<tr class="border-b border-outline-variant hover:bg-surface-container-low">
+          <td class="p-4 text-sm font-mono">#${r.request_no}</td>
+          <td class="p-4 text-sm">${r.type}</td>
+          <td class="p-4 text-sm">${r.created_at}</td>
+          <td class="p-4"><span class="px-2 py-1 ${statusMap[r.status] || ''} rounded-full text-xs font-semibold">${labelMap[r.status] || r.status}</span></td>
+          <td class="p-4"><a class="text-primary text-sm hover:underline cursor-pointer">查看</a></td></tr>`;
+      }).join('');
+    } catch (err) {
+      console.error('loadMyRequests:', err);
+    }
+  }
+
+  // === Stats (HR Dashboard) ===
+  async function loadStats() {
+    try {
+      const resp = await fetch(`${API_BASE}/stats`);
+      const s = await resp.json();
+      const container = document.querySelector('#page-dashboard .grid');
+      if (!container || !s) return;
+      container.innerHTML = `
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">今日咨询量</p><p class="text-3xl font-black text-primary mt-2">实时</p></div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">待审批</p><p class="text-3xl font-black text-yellow-600 mt-2">${s.pending || 0}</p></div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">本月通过率</p><p class="text-3xl font-black text-green-600 mt-2">${s.total ? Math.round((s.approved||0)/(s.approved+s.rejected+1)*100) : 0}%</p></div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-6"><p class="text-sm text-on-surface-variant">知识库条目</p><p class="text-3xl font-black text-secondary mt-2">${s.total_kb || 0}</p></div>`;
+    } catch (err) {
+      console.error('loadStats:', err);
     }
   }
 
@@ -543,9 +641,22 @@
     document.getElementById('requestModal').classList.remove('hidden');
   }
   
-  function submitRequest() {
+  async function submitRequest() {
+    const type = document.querySelector('#requestModal select').value;
+    const purpose = document.querySelector('#requestModal select:nth-of-type(2)').value;
+    const extra = document.querySelector('#requestModal textarea').value;
     document.getElementById('requestModal').classList.add('hidden');
-    alert('申请提交成功！跟踪单号: #REQ-NEW-' + Math.floor(Math.random()*10000));
+    try {
+      const resp = await fetch(`${API_BASE}/requests`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type, purpose, extra_info: extra})
+      });
+      const data = await resp.json();
+      alert(`申请提交成功！跟踪单号: ${data.request_no}`);
+    } catch (err) {
+      alert('提交失败: ' + err.message);
+    }
   }
 
   // Close modal on Escape
@@ -553,7 +664,6 @@
     if (e.key === 'Escape') document.getElementById('requestModal').classList.add('hidden');
   });
 
-  // Click outside modal to close
   document.getElementById('requestModal').addEventListener('click', function(e) {
     if (e.target === this) this.classList.add('hidden');
   });
