@@ -642,9 +642,10 @@
   }
   
   async function submitRequest() {
-    const type = document.querySelector('#requestModal select').value;
-    const purpose = document.querySelector('#requestModal select:nth-of-type(2)').value;
-    const extra = document.querySelector('#requestModal textarea').value;
+    const selects = document.querySelectorAll('#requestModal select');
+    const type = selects[0]?.value || '';
+    const purpose = selects[1]?.value || '';
+    const extra = document.querySelector('#requestModal textarea')?.value || '';
     document.getElementById('requestModal').classList.add('hidden');
     try {
       const resp = await fetch(`${API_BASE}/requests`, {
