@@ -12,8 +12,10 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 import database as db
 import vectordb as vdb
+from miniapp import miniapp_bp
 
 app = Flask(__name__, static_folder='../src', static_url_path='')
+app.register_blueprint(miniapp_bp)
 
 
 # === 初始化 ===
