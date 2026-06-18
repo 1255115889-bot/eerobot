@@ -1,12 +1,14 @@
 {
-  "description": "HR Copilot 微信小程序",
-  "appid": "wx605c33df1d030593",
-  "projectname": "hr-copilot",
-  "miniprogramRoot": "./",
+  "description": "HR 政策顾问",
+  "packOptions": { "ignore": [] },
   "setting": {
     "urlCheck": true,
     "es6": true,
     "postcss": true,
     "minified": true
-  }
+  },
+  "compileType": "miniprogram",
+  "appid": "wx605c33df1d030593",
+  "projectname": "hr-copilot",
+  "libVersion": "3.3.4"
 }

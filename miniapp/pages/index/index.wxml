@@ -1,0 +1,38 @@
+<!-- 聊天主页面 -->
+<view class="container">
+  <!-- 消息列表 -->
+  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollTo}}" scroll-with-animation>
+    <block wx:for="{{messages}}" wx:key="id">
+      <!-- 用户消息 -->
+      <view wx:if="{{item.isUser}}" class="msg-row msg-right">
+        <view class="msg-bubble msg-user">{{item.text}}</view>
+      </view>
+      <!-- AI 回复 -->
+      <view wx:else class="msg-row msg-left">
+        <view class="msg-avatar">🤖</view>
+        <view class="msg-content">
+          <view class="msg-bubble msg-ai">{{item.text}}</view>
+          <!-- 来源引用 -->
+          <view wx:if="{{item.source}}" class="msg-source">📋 {{item.source}}</view>
+          <!-- 业务卡片 -->
+          <block wx:if="{{item.cards && item.cards.length}}">
+            <view class="card-list">
+              <view wx:for="{{item.cards}}" wx:for-item="card" wx:key="title" class="card">
+                <view class="card-title">{{card.title}}</view>
+                <view class="card-desc">{{card.desc}}</view>
+                <button class="card-btn" size="mini">{{card.btn}}</button>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+    <view id="msg-bottom"></view>
+  </scroll-view>
+
+  <!-- 输入区 -->
+  <view class="input-area">
+    <input class="input-box" placeholder="输入 HR 问题，如：年假怎么申请？" bindinput="onInput" value="{{inputVal}}" confirm-type="send" bindconfirm="sendMsg"/>
+    <button class="send-btn" bindtap="sendMsg">发送</button>
+  </view>
+</view>

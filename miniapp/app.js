@@ -1,44 +1,43 @@
-const API_BASE = 'https://cccarolyn.top/api/miniapp'
-
-// 全局 token
-let _token = ''
-let _openid = ''
+const API = 'https://cccarolyn.top/api/miniapp'
+const app = getApp ? getApp() : { globalData: { token: '' } }
 
 App({
+  globalData: { token: '', openid: '' },
+
   onLaunch() {
-    this.checkLogin()
-  },
-
-  checkLogin() {
     const saved = wx.getStorageSync('token')
-    if (saved) {
-      _token = saved
-      _openid = wx.getStorageSync('openid')
-      return
-    }
-
-    // 微信登录
+    if (saved) { this.globalData.token = saved; return }
     wx.login({
-      success: (res) => {
-        if (!res.code) return
+      success: res => {
         wx.request({
-          url: `${API_BASE}/login`,
-          method: 'POST',
+          url: API + '/login', method: 'POST',
           data: { code: res.code },
-          success: (resp) => {
-            if (resp.statusCode === 200 && resp.data.token) {
-              _token = resp.data.token
-              _openid = resp.data.openid
-              wx.setStorageSync('token', _token)
-              wx.setStorageSync('openid', _openid)
+          success: r => {
+            if (r.data && r.data.token) {
+              this.globalData.token = r.data.token
+              wx.setStorageSync('token', r.data.token)
             }
           }
         })
       }
     })
-  },
-
-  getToken() { return _token },
-  getOpenid() { return _openid },
-  getApiBase() { return API_BASE }
+  }
 })
+
+function request(path, data, method) {
+  method = method || 'POST'
+  var token = (getApp() && getApp().globalData && getApp().globalData.token) || ''
+  return new Promise(function(resolve, reject) {
+    wx.request({
+      url: API + path, method: method,
+      header: { 'Authorization': 'Bearer ' + token },
+      data: data,
+      success: function(r) {
+        if (r.statusCode === 200) resolve(r.data); else reject(r.data)
+      },
+      fail: reject
+    })
+  })
+}
+
+module.exports = { request: request }

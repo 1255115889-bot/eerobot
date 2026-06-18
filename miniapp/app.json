@@ -1,11 +1,9 @@
 {
-  "pages": [
-    "pages/chat/chat"
-  ],
+  "pages": ["pages/index/index"],
   "window": {
-    "navigationBarTitleText": "HR Copilot",
-    "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "HR 政策顾问",
+    "navigationBarBackgroundColor": "#004ac6",
+    "navigationBarTextStyle": "white",
     "backgroundColor": "#f8f9ff"
   },
   "style": "v2",
