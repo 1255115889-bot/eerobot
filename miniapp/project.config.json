@@ -1,0 +1,12 @@
+{
+  "description": "HR Copilot 微信小程序",
+  "appid": "wx605c33df1d030593",
+  "projectname": "hr-copilot",
+  "miniprogramRoot": "./",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "postcss": true,
+    "minified": true
+  }
+}

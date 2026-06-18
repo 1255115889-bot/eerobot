@@ -1,0 +1,74 @@
+<view class="page">
+  <!-- 头部 -->
+  <view class="header">
+    <text class="title">HR Copilot</text>
+    <text class="subtitle">AI 员工政策顾问</text>
+  </view>
+
+  <!-- 聊天区 -->
+  <scroll-view class="chat-area" scroll-y scroll-into-view="{{scrollTo}}">
+    <view wx:if="{{messages.length === 0}}" class="welcome">
+      <text class="welcome-icon">🤖</text>
+      <text class="welcome-text">您好！我是 HR Copilot</text>
+      <text class="welcome-desc">可以帮您查询 HR 政策、办理业务</text>
+
+      <view class="presets">
+        <view class="preset" bindtap="askPreset" data-q="年假怎么申请？">
+          🏖 年假怎么申请？
+        </view>
+        <view class="preset" bindtap="askPreset" data-q="在职证明怎么开？">
+          📄 在职证明怎么开？
+        </view>
+        <view class="preset" bindtap="askPreset" data-q="薪资什么时候发？">
+          💰 薪资什么时候发？
+        </view>
+        <view class="preset" bindtap="askPreset" data-q="请假流程是什么？">
+          ✈ 请假流程是什么？
+        </view>
+      </view>
+    </view>
+
+    <block wx:for="{{messages}}" wx:key="id">
+      <view class="msg {{item.role === 'user' ? 'msg-user' : 'msg-ai'}}">
+        <view class="bubble {{item.role === 'user' ? 'bubble-user' : 'bubble-ai'}}">
+          <!-- 思考中 -->
+          <block wx:if="{{item.thinking}}">
+            <view class="thinking">
+              <view class="dot"></view><view class="dot"></view><view class="dot"></view>
+            </view>
+          </block>
+
+          <!-- 正文 -->
+          <text wx:if="{{!item.thinking}}" class="text">{{item.content}}</text>
+
+          <!-- 来源 -->
+          <view wx:if="{{item.source}}" class="source">
+            📋 {{item.source}}
+          </view>
+
+          <!-- 业务卡片 -->
+          <view wx:if="{{item.cards && item.cards.length > 0}}" class="cards">
+            <view wx:for="{{item.cards}}" wx:for-item="card" class="card card-{{card.type}}">
+              <view class="card-title">{{card.title}}</view>
+              <view class="card-desc">{{card.desc}}</view>
+              <view class="card-btn">{{card.btn}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view id="scroll-bottom"></view>
+  </scroll-view>
+
+  <!-- 输入区 -->
+  <view class="input-area">
+    <input class="input" placeholder="输入 HR 问题..." 
+           value="{{inputText}}" bindinput="onInput"
+           confirm-type="send" bindconfirm="sendMessage"
+           disabled="{{sending}}"/>
+    <button class="send-btn" bindtap="sendMessage" disabled="{{sending}}">
+      发送
+    </button>
+  </view>
+</view>

@@ -20,6 +20,76 @@ WX_SECRET = "f575875a6ffda494d44ca8596677bc68"
 _sessions = {}  # token → {"openid": str, "expires": int}
 
 
+# ====== 微信服务器验证（回调 URL） ======
+
+WX_VERIFY_TOKEN = "HermesWxBot2026"
+
+
+@miniapp_bp.route('/weixin', methods=['GET', 'POST'])
+def weixin_callback():
+    """微信服务器回调：GET 验证接入 / POST 接收消息"""
+    import xml.etree.ElementTree as ET
+
+    signature = request.args.get('signature', '')
+    timestamp = request.args.get('timestamp', '')
+    nonce = request.args.get('nonce', '')
+
+    # SHA1 签名校验
+    tmp_list = sorted([WX_VERIFY_TOKEN, timestamp, nonce])
+    tmp_str = ''.join(tmp_list)
+    calc = hashlib.sha1(tmp_str.encode()).hexdigest()
+    if calc != signature:
+        return 'signature mismatch', 403
+
+    # GET 请求 — 接入验证
+    if request.method == 'GET':
+        return request.args.get('echostr', '')
+
+    # POST 请求 — 接收用户消息
+    xml_data = request.data.decode('utf-8')
+    root = ET.fromstring(xml_data)
+    msg_type = root.find('MsgType')
+    msg_type = msg_type.text if msg_type is not None else 'text'
+
+    from_user = root.find('FromUserName')
+    to_user = root.find('ToUserName')
+    from_user = from_user.text if from_user is not None else ''
+    to_user = to_user.text if to_user is not None else ''
+
+    if msg_type == 'text':
+        content = root.find('Content')
+        query = content.text if content is not None else ''
+
+        # 调用 RAG 获取回答
+        try:
+            resp = httpx.post(
+                "http://127.0.0.1:5000/api/chat",
+                json={"query": query, "role": "employee"},
+                timeout=15
+            )
+            ai_data = resp.json()
+            reply = ai_data.get('answer', '抱歉，我暂时无法回答这个问题。')
+            if ai_data.get('source'):
+                reply += f"\n\n📋 {ai_data['source']}"
+        except Exception:
+            reply = 'AI 服务暂时不可用，请稍后再试。'
+
+        return _build_text_reply_xml(from_user, to_user, reply)
+
+    # 默认回复
+    return _build_text_reply_xml(from_user, to_user, '您好！发送文字即可与我对话 😊')
+
+
+def _build_text_reply_xml(to_user, from_user, content):
+    return f'''<xml>
+<ToUserName><![CDATA[{to_user}]]></ToUserName>
+<FromUserName><![CDATA[{from_user}]]></FromUserName>
+<CreateTime>{int(time.time())}</CreateTime>
+<MsgType><![CDATA[text]]></MsgType>
+<Content><![CDATA[{content}]]></Content>
+</xml>'''
+
+
 def _make_token(openid: str) -> str:
     return hashlib.sha256(f"{openid}:{time.time()}".encode()).hexdigest()
 
